@@ -41,12 +41,11 @@ class ArticulosViewSet(viewsets.ViewSet):
             result = []
             for row in records:
                 result.append(dict(zip(columns, row)))
-            """ try:
-                for item in range(0, 70):
-                    result.append(data[item])
-            # pylint: disable=broad-except
-            except Exception:
-                pass """
+            #try:
+            #    for item in range(0, 70):
+            #        result.append(data[item])
+            #except Exception:
+            #    pass
             if not result:
                 return Response({'result':'Articulo no encontrado'}, status=404)
             return Response({'data':result}, status=200)
@@ -67,7 +66,8 @@ class ArticulosViewSet(viewsets.ViewSet):
                               user='SYSDBA',
                               password='masterkey')
             cursor = con.cursor()
-            cursor.execute(self.QUERY_ARTICULOS + "where ARTICULOS.ARTICULO_ID like '{}'".format(pk))
+            cursor.execute(self.QUERY_ARTICULOS +
+                           "where ARTICULOS.ARTICULO_ID like '{}'".format(pk))
             record = cursor.fetchone()
             if record:
                 columns = [column[0] for column in cursor.description]
