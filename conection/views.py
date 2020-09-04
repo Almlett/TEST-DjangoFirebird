@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 class ArticulosViewSet(viewsets.ViewSet):
     """
-    A simple ViewSet for listing or retrieving users.
+    Articulos viewset
     """
     QUERY_ARTICULOS = """SELECT
                 ARTICULOS.ARTICULO_ID, 
@@ -38,16 +38,16 @@ class ArticulosViewSet(viewsets.ViewSet):
             records = cursor.fetchall()
             columns = [column[0] for column in cursor.description]
             cursor.close()
-            data = []
+            result = []
             for row in records:
-                data.append(dict(zip(columns, row)))
-            try:
-                for item in range(0, 35):
+                result.append(dict(zip(columns, row)))
+            """ try:
+                for item in range(0, 70):
                     result.append(data[item])
             # pylint: disable=broad-except
             except Exception:
-                pass
-            if not data:
+                pass """
+            if not result:
                 return Response({'result':'Articulo no encontrado'}, status=404)
             return Response({'data':result}, status=200)
         return Response({'result':'Error en parametros recibidos'}, status=200)
