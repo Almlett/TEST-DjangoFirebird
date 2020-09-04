@@ -8,8 +8,6 @@ router = DefaultRouter()
 router.register(r'user_viewset', UserViewSet, base_name='User_Viewset')
 
 urlpatterns = patterns(
-    
     url(r'^home/$', home, name='home'),
-    
 )
 urlpatterns += router.urls
