@@ -26,7 +26,7 @@ class ArticulosViewSet(viewsets.ViewSet):
         result = []
         if name:
             if len(name) < 3:
-                return Response({'result':'La cantidad minima de caracteres es 4'}, status=400)
+                return Response({'result':'La cantidad minima de caracteres es 3'}, status=400)
             name = name.upper()
             con = fdb.connect(host='localhost',
                               port=3050,
