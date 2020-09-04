@@ -1,3 +1,4 @@
+import fdb
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
@@ -12,6 +13,14 @@ class UserViewSet(viewsets.ViewSet):
     def list(self, request):
         #queryset = User.objects.all()
         #serializer = UserSerializer(queryset, many=True)
+        """ con = fdb.connect(dsn="ruta", user="SYSDBA", password="masterkey")
+        cursor = con.cursor()
+        cursor.execute("SELECT * FROM *")
+        row == cursor.fetchone()
+        while row:
+            print (row)
+            row = cursor.fetchone() """
+
         data = {}
         data['id'] = 1
         data['Nombre'] = "Nombre"
