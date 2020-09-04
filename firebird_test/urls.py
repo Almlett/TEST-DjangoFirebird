@@ -21,5 +21,5 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     
-    url(r'^conection/',include('conection.urls', namespace="conection")),
+    url(r'^api-microsip/',include('conection.urls', namespace="conection")),
 ]

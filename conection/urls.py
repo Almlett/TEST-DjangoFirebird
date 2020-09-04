@@ -5,7 +5,7 @@ from .views import *
 
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
-router.register(r'user_viewset', UserViewSet, base_name='User_Viewset')
+router.register(r'articulos', ArticulosViewSet, base_name='User_Viewset')
 
 urlpatterns = patterns(
     url(r'^home/$', home, name='home'),
