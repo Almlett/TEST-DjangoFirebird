@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from django.conf.urls import patterns, url, include
-from .views import *
+from .views import ArticulosViewSet,home
 
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()

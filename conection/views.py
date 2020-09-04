@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
     View Conection
 """
@@ -58,7 +60,8 @@ class ArticulosViewSet(viewsets.ViewSet):
             Get
         """
         result = []
-        print pk
+        if not pk.isdigit():
+            return Response({'result':'El ID tiene que ser un número'}, status=404)
         if pk:
             con = fdb.connect(host='localhost',
                               port=3050,
