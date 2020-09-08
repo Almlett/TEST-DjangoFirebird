@@ -132,8 +132,19 @@ class ClientesViewSet(viewsets.ViewSet):
                     result = dict(zip(columns, client))
                     return Response({'result':result}, status=200)
                 return Response({'result':'ID no encontrado'}, status=404)
-            except Exception:
-                pass
+            except fdb.Error, e:
+                try:
+                    return Response({'result': e.args[0]}, status=400)
+                except IndexError:
+                    return Response({'result': "MySQL Error: %s" % str(e)}, status=400)
+
+    def update(self, request, pk=None):
+        put_data = request.data
+        return Response(data="return data")
+
+    def partial_update(self, request, pk=None):
+        patch_data = request.data
+        return Response(data="return data")
 
     def list(self, request):
         """
