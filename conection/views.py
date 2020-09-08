@@ -139,12 +139,88 @@ class ClientesViewSet(viewsets.ViewSet):
                     return Response({'result': "MySQL Error: %s" % str(e)}, status=400)
 
     def update(self, request, pk=None):
-        put_data = request.data
-        return Response(data="return data")
+        put_data = dict(request.data)
+        columns = put_data.keys()
+        obligatorios = ["NOMBRE",
+                        "SUJETO_IEPS",
+                        "DIFERIR_CFDI_COBROS",
+                        "LIMITE_CREDITO",
+                        "MONEDA_ID",
+                        "COND_PAGO_ID"]
+        missing = []
+        for element in obligatorios:
+            if not element in columns or put_data[element][0] in [".",""," ", "  "]:
+                missing.append(element)
+            
+        print missing
+        if missing:
+            return Response({'result': {'Campos faltantes': missing}}, status=400)
+
+        fields = self.fields_updated(put_data)
+        if fields['wrong']:
+            return Response({'result': fields['wrong']}, status=400)
+
+        with fdb.connect(host = 'localhost',
+                         port = 3050,
+                         database = '/home/michel/Downloads/EXCEL.FDB',
+                         user = 'SYSDBA',
+                         password = 'masterkey') as con:
+            query = "UPDATE CLIENTES SET {} WHERE CLIENTES.CLIENTE_ID LIKE '{}'".format(fields['data'], pk)
+            try:
+                cursor = con.cursor()
+                cursor.execute(query)
+                con.commit()
+                cursor.close()
+
+                select_cursor = con.cursor()
+                select_cursor.execute("SELECT * FROM CLIENTES where CLIENTES.CLIENTE_ID like '{}'".format(pk))
+                client = select_cursor.fetchone()
+                columns = [column[0] for column in select_cursor.description]
+                select_cursor.close()
+                con.close()
+                if client:
+                    result = dict(zip(columns, client))
+                    return Response({'result':result}, status=200)
+                return Response({'result':'ID no encontrado'}, status=404)
+            except fdb.Error, e:
+                try:
+                    return Response({'result': e.args[0]}, status=400)
+                except IndexError:
+                    return Response({'result': "MySQL Error: %s" % str(e)}, status=400)
 
     def partial_update(self, request, pk=None):
-        patch_data = request.data
-        return Response(data="return data")
+        patch_data = dict(request.data)
+        fields = self.fields_updated(patch_data)
+        if fields['wrong']:
+            return Response({'result': fields['wrong']}, status=400)
+
+        with fdb.connect(host = 'localhost',
+                         port = 3050,
+                         database = '/home/michel/Downloads/EXCEL.FDB',
+                         user = 'SYSDBA',
+                         password = 'masterkey') as con:
+            query = "UPDATE CLIENTES SET {} WHERE CLIENTES.CLIENTE_ID LIKE '{}'".format(fields['data'], pk)
+            try:
+                cursor = con.cursor()
+                cursor.execute(query)
+                con.commit()
+                cursor.close()
+
+                select_cursor = con.cursor()
+                select_cursor.execute("SELECT * FROM CLIENTES where CLIENTES.CLIENTE_ID like '{}'".format(pk))
+                client = select_cursor.fetchone()
+                columns = [column[0] for column in select_cursor.description]
+                select_cursor.close()
+                con.close()
+                if client:
+                    result = dict(zip(columns, client))
+                    return Response({'result':result}, status=200)
+                return Response({'result':'ID no encontrado'}, status=404)
+            except fdb.Error, e:
+                try:
+                    return Response({'result': e.args[0]}, status=400)
+                except IndexError:
+                    return Response({'result': "MySQL Error: %s" % str(e)}, status=400)
 
     def list(self, request):
         """
@@ -319,4 +395,78 @@ class ClientesViewSet(viewsets.ViewSet):
         for element in x:
             cadena += element + ","
         result['columns_formated'] = cadena[:len(cadena)-1]
+        return result
+
+    @staticmethod
+    def fields_updated(data):
+        result = ""
+        wrong = []
+        columns = data.keys()
+        posible_items = ["NOMBRE", "CONTACTO1", "CONTACTO2", "ESTATUS", "CAUSA_SUSP", "FECHA_SUSP", "COBRAR_IMPUESTOS", "RETIENE_IMPUESTOS", "SUJETO_IEPS", "GENERAR_INTERESES", "EMITIR_EDOCTA", "DIFERIR_CFDI_COBROS", "LIMITE_CREDITO", "MONEDA_ID", "COND_PAGO_ID", "TIPO_CLIENTE_ID", "ZONA_CLIENTE_ID", "COBRADOR_ID", "VENDEDOR_ID", "NOTAS", "CUENTA_CXC", "CUENTA_ANTICIPOS", "FORMATOS_EMAIL", "RECEPTOR_CFD", "NUM_PROV_CLIENTE", "CAMPOS_ADDENDA", "USUARIO_CREADOR", "FECHA_HORA_CREACION", "USUARIO_AUT_CREACION", "USURAIO_ULT_MODIF", "FECHA_HORA_ULTMODIF", "USUARIO_AUT_MODIF"]
+        for item in columns:
+            if item in posible_items:
+                key = item
+                val = data[item][0]
+                digits = ["MONEDA_ID",
+                          "COND_PAGO_ID",
+                          "TIPO_CLIENTE_ID",
+                          "ZONA_CLIENTE_ID",
+                          "COBRADOR_ID",
+                          "VENDEDOR_ID"]
+                floats = ['LIMITE_CREDITO']
+                dates = ['FECHA_SUSP']
+                bools = ['DIFERIR_CFDI_COBROS']
+                lista = ["COBRAR_IMPUESTOS",
+                         "RETIENE_IMPUESTOS",
+                         "SUJETO_IEPS",
+                         "GENERAR_INTERESES",
+                         "EMITIR_EDOCTA"]
+                if key in digits:
+                    if not str(val).isdigit():
+                        wrong.append('{} necesita ser tipo ID'.format(key))
+                    else:
+                        val = int(val)
+                        result += "{} = {}, ".format(key,val)
+                elif key in floats:
+                    #Float
+                    num = val.split('.')
+                    if not (num[-1] is not None and num[-1].isdigit()):
+                        wrong.append('{} necesita ser un número'.format(key))
+                    else:
+                        val = float(val)
+                        result += "{} = {}, ".format(key,val)
+                elif key in dates:
+                    #Date
+                    try:
+                        date = datetime.strptime(val, '%Y-%m-%d')
+                    except Exception:
+                        date = None
+                    if 'datetime.datetime' in str(type(date)):
+                        val = str(val)
+                        result += "{} = '{}', ".format(key,val)
+                    else:
+                        wrong.append('{} necesita tener formato de fecha (YYYY-MM-DD)'
+                                        .format(key))
+                elif key in bools:
+                    #Bool
+                    if val == "true":
+                        val = True
+                    else:
+                        val = False
+                    result += "{} = {}, ".format(key,val)
+                elif key in lista:
+                    #S/N
+                    if val in ['s','S',"n","N"]:
+                        val = str(val).upper()
+                        result += "{} = '{}', ".format(key,val)
+                    else:
+                        wrong.append('{} necesita tener el formato S/N'.format(key))
+                else:
+                    val = str(val)
+                    result += "{} = '{}', ".format(key,val)
+        result = result[:len(result)-2]
+        result = {
+            'wrong':wrong,
+            'data':result,
+        }
         return result
